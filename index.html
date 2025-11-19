@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>课堂安静神器 - HTML 复刻版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #5b3200 0, #180b02 55%, #050100 100%);
+      color: #ffd96a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1000px;
+      background: linear-gradient(160deg, #3a1a02 0, #1e0d02 40%, #1a0b01 100%);
+      border-radius: 24px;
+      padding: 24px 32px 32px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 199, 64, 0.15);
+    }
+
+    header {
+      text-align: center;
+      font-size: 24px;
+      letter-spacing: 4px;
+      margin-bottom: 18px;
+      color: #ffe88a;
+      text-shadow: 0 0 20px rgba(255, 217, 106, 0.7);
+    }
+
+    .top-panel {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      padding: 14px 18px;
+      background: radial-gradient(circle at top, #4b2606 0, #2a1404 55%);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 204, 102, 0.25);
+      margin-bottom: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 120px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: #f9dca0;
+      opacity: 0.9;
+    }
+
+    .field input {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 999px;
+      border: 1px solid rgba(255, 217, 106, 0.4);
+      padding: 6px 10px;
+      color: #ffe9aa;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .field input:focus {
+      box-shadow: 0 0 0 1px rgba(255, 217, 106, 0.6);
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out,
+        background 0.08s ease-out;
+      white-space: nowrap;
+    }
+
+    #startBtn {
+      margin-left: auto;
+      background: linear-gradient(135deg, #ffdf73 0, #ffb92b 100%);
+      color: #5a3100;
+      font-weight: 600;
+      box-shadow: 0 0 18px rgba(255, 204, 102, 0.55);
+    }
+
+    #startBtn.running {
+      background: linear-gradient(135deg, #ffb22e 0, #ff8b2b 100%);
+      color: #2b1300;
+    }
+
+    #resetBtn {
+      background: rgba(0, 0, 0, 0.4);
+      color: #f5d597;
+      border: 1px solid rgba(255, 217, 106, 0.4);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr;
+      gap: 18px;
+      margin-top: 4px;
+    }
+
+    /* 左侧大分数 */
+    .score-panel {
+      background: radial-gradient(circle at top, #422008 0, #210c03 60%);
+      border-radius: 18px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 189, 74, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-panel::before {
+      content: "课堂安静神器";
+      position: absolute;
+      top: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+      letter-spacing: 4px;
+      color: rgba(255, 233, 170, 0.1);
+      white-space: nowrap;
+    }
+
+    .score-value {
+      font-size: 80px;
+      font-weight: 700;
+      color: #ffdd71;
+      text-shadow: 0 0 24px rgba(255, 220, 120, 0.9);
+    }
+
+    .score-unit {
+      margin-top: 4px;
+      font-size: 18px;
+      color: #f5c96a;
+    }
+
+    .score-sub {
+      margin-top: 16px;
+      font-size: 13px;
+      color: rgba(255, 233, 170, 0.8);
+    }
+
+    .score-sub span {
+      color: #ffdd80;
+      font-weight: 500;
+    }
+
+    /* 中间 / 右侧部分 */
+    .center-panel {
+      background: radial-gradient(circle at top, #43210a 0, #220e05 60%);
+      border-radius: 18px;
+      padding: 18px 20px 20px;
+      border: 1px solid rgba(255, 199, 96, 0.3);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;
+      gap: 8px;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .timer-block {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border: 1px solid rgba(255, 217, 106, 0.25);
+    }
+
+    .timer-label {
+      font-size: 12px;
+      color: #f8dca5;
+      opacity: 0.9;
+    }
+
+    .timer-value {
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: #ffe9ab;
+    }
+
+    .gauge-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 4px;
+      padding-bottom: 6px;
+    }
+
+    .gauge {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 10%, #fffbde 0, #ffdf7b 20%, #c47a09 55%, #2a1205 100%);
+      position: relative;
+      box-shadow: 0 0 26px rgba(255, 207, 110, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-inner {
+      width: 65%;
+      height: 65%;
+      border-radius: 50%;
+      background: radial-gradient(circle at top, #2a1204 0, #150702 60%);
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #ffe8a2;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .gauge-db {
+      margin-top: 4px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .needle {
+      position: absolute;
+      width: 50%;
+      height: 3px;
+      background: #ffeede;
+      left: 50%;
+      top: 50%;
+      transform-origin: 10% 50%;
+      transform: rotate(-120deg);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+      border-radius: 999px;
+    }
+
+    .needle::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff8e2 0, #ffcf62 60%, #b56a00 100%);
+      left: -6px;
+      top: -5.5px;
+      box-shadow: 0 0 10px rgba(255, 222, 128, 0.8);
+    }
+
+    .threshold-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 217, 106, 0.25);
+    }
+
+    .threshold-value {
+      font-weight: 600;
+      color: #ffe38f;
+    }
+
+    .status {
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-top: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(140, 255, 158, 0.25);
+      color: #bbffbb;
+    }
+
+    .status.bad {
+      border-color: rgba(255, 153, 153, 0.45);
+      color: #ffbbbb;
+    }
+
+    .bottom-hint {
+      margin-top: 3px;
+      font-size: 12px;
+      color: rgba(255, 230, 190, 0.7);
+      text-align: right;
+    }
+
+    .warning {
+      margin-top: 6px;
+      font-size: 11px;
+      color: rgba(255, 168, 168, 0.9);
+    }
+
+    @media (max-width: 780px) {
+      .app {
+        padding: 18px 16px 22px;
+      }
+
+      .top-panel {
+        flex-wrap: wrap;
+      }
+
+      #startBtn {
+        margin-left: 0;
+      }
+
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .score-panel {
+        order: 2;
+      }
+
+      .center-panel {
+        order: 1;
+      }
+
+      .score-value {
+        font-size: 64px;
+      }
+
+      .gauge {
+        width: 150px;
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>每一秒都在进步</header>
+
+    <div class="top-panel">
+      <div class="field">
+        <label>目标分数</label>
+        <input id="targetScore" type="number" value="100" min="1" />
+      </div>
+      <div class="field">
+        <label>上课时间</label>
+        <input id="startTime" type="time" value="08:30" />
+      </div>
+      <div class="field">
+        <label>下课时间</label>
+        <input id="endTime" type="time" value="09:15" />
+      </div>
+      <div class="field">
+        <label>安静分贝</label>
+        <input id="quietThreshold" type="number" value="30" min="10" max="90" />
+      </div>
+      <button id="startBtn">开始学习</button>
+      <button id="resetBtn">重置</button>
+    </div>
+
+    <div class="main">
+      <!-- 左侧得分大屏 -->
+      <div class="score-panel">
+        <div id="scoreValue" class="score-value">0.00</div>
+        <div class="score-unit">分</div>
+        <div class="score-sub">
+          当前上课安静得分：<span id="scoreDesc">保持安静即可快速得分</span>
+        </div>
+      </div>
+
+      <!-- 中心 + 右侧 -->
+      <div class="center-panel">
+        <div class="time-row">
+          <div class="timer-block">
+            <div class="timer-label">已学习时间</div>
+            <div id="elapsedTime" class="timer-value">00:00:00</div>
+          </div>
+          <div class="timer-block">
+            <div class="timer-label">剩余时间</div>
+            <div id="remainingTime" class="timer-value">00:45:00</div>
+          </div>
+        </div>
+
+        <div class="gauge-wrapper">
+          <div class="gauge">
+            <div class="needle" id="needle"></div>
+            <div class="gauge-inner">
+              <div>当前分贝</div>
+              <div id="currentDb" class="gauge-db">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="threshold-row">
+          <span>分贝限制</span>
+          <span class="threshold-value" id="thresholdLabel">30 dB</span>
+        </div>
+
+        <div id="status" class="status">
+          当前环境很安静，请继续保持 👏
+        </div>
+
+        <div class="bottom-hint">
+          安静越久，得分越高；噪音超标则暂停计分
+        </div>
+
+        <div id="micWarning" class="warning" style="display:none;">
+          浏览器未能访问麦克风，请检查：是否授予权限 / 是否使用 https 或本地文件。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---- DOM 元素 ----
+    const targetScoreInput = document.getElementById("targetScore");
+    const startTimeInput = document.getElementById("startTime");
+    const endTimeInput = document.getElementById("endTime");
+    const quietThresholdInput = document.getElementById("quietThreshold");
+
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const scoreValueEl = document.getElementById("scoreValue");
+    const scoreDescEl = document.getElementById("scoreDesc");
+
+    const elapsedTimeEl = document.getElementById("elapsedTime");
+    const remainingTimeEl = document.getElementById("remainingTime");
+
+    const needleEl = document.getElementById("needle");
+    const currentDbEl = document.getElementById("currentDb");
+    const thresholdLabelEl = document.getElementById("thresholdLabel");
+    const statusEl = document.getElementById("status");
+    const micWarningEl = document.getElementById("micWarning");
+
+    // ---- 计时与得分状态 ----
+    let isRunning = false;
+    let totalSeconds = 45 * 60; // 默认 45 分钟
+    let elapsedMs = 0;
+    let lastTickTime = null;
+    let quietSeconds = 0;
+    let targetScore = 100;
+    let quietThreshold = 30;
+
+    // ---- 音频相关 ----
+    let audioContext = null;
+    let analyser = null;
+    let dataArray = null;
+    let micStream = null;
+    let lastDb = null;
+    let soundIntervalId = null;
+
+    // 格式化时间：秒 -> HH:MM:SS
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds));
+      const h = String(Math.floor(s / 3600)).padStart(2, "0");
+      const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+      const sec = String(s % 60).padStart(2, "0");
+      return `${h}:${m}:${sec}`;
+    }
+
+    // 计算上课时长（根据上/下课时间）
+    function computeTotalSecondsFromTime() {
+      const st = startTimeInput.value || "08:30";
+      const et = endTimeInput.value || "09:15";
+      const [sh, sm] = st.split(":").map(Number);
+      const [eh, em] = et.split(":").map(Number);
+      let start = sh * 60 + sm;
+      let end = eh * 60 + em;
+      if (isNaN(start) || isNaN(end)) return 45 * 60;
+      if (end <= start) {
+        // 防止老师写错时间，兼容一下，最少 30 分钟
+        return 45 * 60;
+      }
+      const diffMin = end - start;
+      return Math.max(diffMin * 60, 10 * 60); // 不少于 10 分钟
+    }
+
+    // 根据分贝更新仪表盘指针
+    function updateGauge(dbValue) {
+      if (dbValue == null || isNaN(dbValue)) {
+        currentDbEl.textContent = "--";
+        needleEl.style.transform = "rotate(-120deg)";
+        return;
+      }
+      const displayDb = Math.round(dbValue);
+      currentDbEl.textContent = displayDb;
+
+      // 限制在 0~80 dB 之间
+      const minDb = 0;
+      const maxDb = 80;
+      const clamped = Math.max(minDb, Math.min(maxDb, dbValue));
+
+      // 仪表盘角度范围：-120° ~ 120°
+      const minAngle = -120;
+      const maxAngle = 120;
+      const ratio = (clamped - minDb) / (maxDb - minDb);
+      const angle = minAngle + (maxAngle - minAngle) * ratio;
+      needleEl.style.transform = `rotate(${angle}deg)`;
+    }
+
+    // 初始化麦克风监听
+    async function initMic() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        micWarningEl.style.display = "block";
+        micWarningEl.textContent =
+          "当前浏览器不支持 getUserMedia，无法获取麦克风分贝。";
+        return;
+      }
+
+      try {
+        micWarningEl.style.display = "none";
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStream = stream;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 1024;
+        const bufferLength = analyser.fftSize;
+        dataArray = new Uint8Array(bufferLength);
+        source.connect(analyser);
+
+        // 每 200ms 计算一次分贝
+        if (soundIntervalId) clearInterval(soundIntervalId);
+        soundIntervalId = setInterval(() => {
+          if (!analyser) return;
+          analyser.getByteTimeDomainData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            const v = (dataArray[i] - 128) / 128; // [-1,1]
+            sum += v * v;
+          }
+          const rms = Math.sqrt(sum / dataArray.length);
+          // 转成一个“相对分贝”数字，用来显示和比较
+          // rms 在 0~1，取对数后是负值，这里人为偏移一下到 0~80 附近
+          let db;
+          if (rms === 0) {
+            db = 0;
+          } else {
+            const dbRaw = 20 * Math.log10(rms); // 约 -60 ~ 0
+            db = Math.max(0, 60 + dbRaw); // 转成 0~60 左右
+          }
+          lastDb = db;
+          updateGauge(db);
+
+          // 更新状态文案
+          if (!isRunning) return;
+          if (db <= quietThreshold) {
+            statusEl.classList.remove("bad");
+            statusEl.textContent = "当前环境很安静，请继续保持 👏";
+          } else {
+            statusEl.classList.add("bad");
+            statusEl.textContent = "当前环境有点吵，超过安静分贝啦～";
+          }
+        }, 200);
+      } catch (err) {
+        micWarningEl.style.display = "block";
+        micWarningEl.textContent =
+          "无法访问麦克风，请检查是否已授予权限。（" + err.message + "）";
+      }
+    }
+
+    // 更新得分和时间显示
+    function updateUI() {
+      const elapsedSeconds = elapsedMs / 1000;
+      const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+      elapsedTimeEl.textContent = formatTime(elapsedSeconds);
+      remainingTimeEl.textContent = formatTime(remainingSeconds);
+
+      const rawScore =
+        (quietSeconds / totalSeconds) * targetScore; // 安静时间占比 * 目标分
+      const score = Math.min(targetScore, rawScore);
+      scoreValueEl.textContent = score.toFixed(2);
+
+      if (score >= targetScore * 0.9) {
+        scoreDescEl.textContent = "安静度满分，课堂纪律非常棒！";
+      } else if (score >= targetScore * 0.6) {
+        scoreDescEl.textContent = "整体表现很好，继续保持就能拿高分～";
+      } else {
+        scoreDescEl.textContent = "再安静一点点，得分会更高哦～";
+      }
+    }
+
+    // 动画循环
+    function tick(timestamp) {
+      if (!isRunning) return;
+      if (lastTickTime == null) lastTickTime = timestamp;
+      const delta = timestamp - lastTickTime;
+      lastTickTime = timestamp;
+
+      elapsedMs += delta;
+      const elapsedSeconds = elapsedMs / 1000;
+
+      if (lastDb != null && lastDb <= quietThreshold) {
+        quietSeconds += delta / 1000;
+      }
+
+      if (elapsedSeconds >= totalSeconds) {
+        elapsedMs = totalSeconds * 1000;
+        isRunning = false;
+        startBtn.classList.remove("running");
+        startBtn.textContent = "已结束";
+      }
+
+      updateUI();
+
+      if (isRunning) {
+        requestAnimationFrame(tick);
+      }
+    }
+
+    // 开始/暂停按钮
+    startBtn.addEventListener("click", () => {
+      if (!isRunning) {
+        // 重新初始化配置
+        targetScore = Math.max(1, Number(targetScoreInput.value) || 100);
+        quietThreshold = Math.max(
+          5,
+          Math.min(90, Number(quietThresholdInput.value) || 30)
+        );
+        thresholdLabelEl.textContent = `${quietThreshold} dB`;
+        totalSeconds = computeTotalSecondsFromTime();
+
+        if (elapsedMs >= totalSeconds * 1000) {
+          // 已经结束过一轮，重新开始
+          elapsedMs = 0;
+          quietSeconds = 0;
+        }
+
+        isRunning = true;
+        lastTickTime = null;
+        startBtn.classList.add("running");
+        startBtn.textContent = "学习中 · 点击暂停";
+
+        initMic(); // 确保麦克风已就绪
+        requestAnimationFrame(tick);
+      } else {
+        // 暂停
+        isRunning = false;
+        startBtn.classList.remove("running");
+        startBtn.textContent = "继续学习";
+      }
+    });
+
+    // 重置按钮
+    resetBtn.addEventListener("click", () => {
+      isRunning = false;
+      elapsedMs = 0;
+      quietSeconds = 0;
+      lastTickTime = null;
+      lastDb = null;
+
+      scoreValueEl.textContent = "0.00";
+      scoreDescEl.textContent = "保持安静即可快速得分";
+      elapsedTimeEl.textContent = "00:00:00";
+      totalSeconds = computeTotalSecondsFromTime();
+      remainingTimeEl.textContent = formatTime(totalSeconds);
+      currentDbEl.textContent = "--";
+      updateGauge(null);
+      statusEl.classList.remove("bad");
+      statusEl.textContent = "当前环境很安静，请继续保持 👏";
+      thresholdLabelEl.textContent = `${quietThresholdInput.value || 30} dB`;
+
+      startBtn.classList.remove("running");
+      startBtn.textContent = "开始学习";
+    });
+
+    // 初始化默认剩余时间显示
+    totalSeconds = computeTotalSecondsFromTime();
+    remainingTimeEl.textContent = formatTime(totalSeconds);
+    thresholdLabelEl.textContent = `${quietThresholdInput.value} dB`;
+
+    // 页面加载时就尝试初始化麦克风（方便老师提前授权）
+    window.addEventListener("load", () => {
+      initMic();
+    });
+  </script>
+</body>
+</html>
